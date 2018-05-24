@@ -4,9 +4,37 @@ import yaml
 import jinja2
 import markdown
 
+SRC_PATH = 'content'
+DST_PATH = 'output'
+
 class Page:
     def __init__(self, filename:str):
         assert filename.endswith('.md')
+
+        meta = {
+            'template': None,
+            'src_path': filename,
+            'src_path_abs': os.path.join(SRC_PATH, filename),
+            'dst_path': filename[:-3] + '.html',
+            'dst_path_abs': os.path.join(DST_PATH, filename[:-3] + '.html'),
+        }
+
+        content, yaml_meta = Page._read_file(meta['src_path_abs'])
+
+        meta.update(yaml_meta)
+
+        self.content=content
+
+        self._meta=meta
+
+        for key, value in meta.items():  # make it accessible as attributes
+            setattr(self, key, value)
+    
+    def __getitem__(self, key):
+        return self._meta[key]
+
+    @staticmethod
+    def _read_file(filename:str):
         with open(filename) as f:
             meta_block = ''
             for line in f:
@@ -16,30 +44,20 @@ class Page:
         
             meta = yaml.load(meta_block)
             content = f.read()
-        if 'path' not in meta:
-            meta['path'] = filename
-        if 'output_file' not in meta:
-            meta['output_file'] = filename[8:-3] + '.html'
-        self.content=content
-        self.meta=meta
-
-    def __getitem__(self, key):
-        return self.meta[key]
-    
-    def __getattr__(self, key):
-        return self.meta[key]
+        return content, meta
     
     def __repr__(self):
-        return self.path
+        return self['src_path']
 
 def main():
     pages = []
 
     # read pages
-    for cur_path, _, files in os.walk('content'):
+    for cur_path, _, files in os.walk(SRC_PATH):
         for file in files:
             if file.endswith('.md'):
-                filepath = os.path.join(cur_path, file)
+                rel_path = os.path.relpath(cur_path, SRC_PATH)
+                filepath = os.path.join(rel_path, file)
                 page = Page(filepath)
                 pages.append(page)
 
@@ -50,17 +68,18 @@ def main():
         pass
     
     # copy static files
-    shutil.copytree('template/static', 'output')
+    shutil.copytree(os.path.join('template', 'static'), DST_PATH)
 
     # render pages
     md = markdown.Markdown(extensions=['meta'])
-    env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.getcwd()+'/template'))
+    template_path = os.path.join(os.getcwd(), 'template')
+    env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_path))
     env.filters['markdown'] = lambda text: jinja2.Markup(md.convert(text))
 
     for page in pages:
-        if 'template' not in page.meta:
+        if page.template is None:
             continue
-        template = env.get_template(page.meta['template'])
-        html_content = template.render(content=page.content, pages=pages, **page.meta)
-        with open('output/' + page.meta['output_file'], 'w') as f:
+        template = env.get_template(page.template)
+        html_content = template.render(content=page.content, pages=pages, **page._meta)
+        with open(page.dst_path_abs, 'w') as f:
             f.write(html_content)

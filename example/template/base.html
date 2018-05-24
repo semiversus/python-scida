@@ -19,8 +19,8 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav mr-auto">
                     <li class="nav-item active"><a class="nav-link" href="index.html">Index</a></li>
-{% for page in pages|sort(attribute='path') if page.template == 'project.html' %}
-                    <li class="nav-item"><a class="nav-link" href="{{ page.output_file }}">{{ page.title }}</a></li>
+{% for page in pages|sort(attribute='src_path') if page.template == 'project.html' %}
+                    <li class="nav-item"><a class="nav-link" href="{{ page.dst_path }}">{{ page.title }}</a></li>
 {% endfor %}
                     <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
                 </ul>
