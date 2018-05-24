@@ -1,4 +1,10 @@
 template: index.html
 title: My Website
 
-This is the index page.
+# Preface
+This is the `index` *page*.
+
+# Content
+* first
+* second
+* third

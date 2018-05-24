@@ -30,7 +30,9 @@
     <main>
         <div class="container">
             <div class="row mt-5 pt-5">
-                {% block content %}{{ content }}{% endblock %}
+                <div class="col">
+                {% block content %}{{ content|markdown }}{% endblock %}
+                </div>
             </div>
         </div>
     </main>

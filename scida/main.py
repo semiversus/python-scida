@@ -2,6 +2,7 @@ import os
 import shutil
 import yaml
 import jinja2
+import markdown
 
 class Page:
     def __init__(self, content:str, meta:dict):
@@ -56,7 +57,9 @@ def main():
     shutil.copytree('template/static', 'output')
 
     # render pages
+    md = markdown.Markdown(extensions=['meta'])
     env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.getcwd()+'/template'))
+    env.filters['markdown'] = lambda text: jinja2.Markup(md.convert(text))
 
     for page in pages:
         if 'template' not in page.meta:
