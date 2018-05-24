@@ -5,18 +5,7 @@ import jinja2
 import markdown
 
 class Page:
-    def __init__(self, content:str, meta:dict):
-        self.content=content
-        self.meta=meta
-    
-    def __getitem__(self, key):
-        return self.meta[key]
-    
-    def __getattr__(self, key):
-        return self.meta[key]
-    
-    @classmethod
-    def read_from_file(cls, filename:str):
+    def __init__(self, filename:str):
         assert filename.endswith('.md')
         with open(filename) as f:
             meta_block = ''
@@ -31,7 +20,14 @@ class Page:
             meta['path'] = filename
         if 'output_file' not in meta:
             meta['output_file'] = filename[8:-3] + '.html'
-        return cls(content, meta)
+        self.content=content
+        self.meta=meta
+
+    def __getitem__(self, key):
+        return self.meta[key]
+    
+    def __getattr__(self, key):
+        return self.meta[key]
     
     def __repr__(self):
         return self.path
@@ -44,7 +40,7 @@ def main():
         for file in files:
             if file.endswith('.md'):
                 filepath = os.path.join(cur_path, file)
-                page = Page.read_from_file(filepath)
+                page = Page(filepath)
                 pages.append(page)
 
     # prepare output folder
