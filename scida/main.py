@@ -7,6 +7,16 @@ import markdown
 SRC_PATH = 'content'
 DST_PATH = 'output'
 
+class File:
+    def __init__(self, path:str):
+        self.path=path
+        self.path_abs = os.path.abspath(os.path.join(SRC_PATH, path))
+
+        assert os.path.exists(self.path_abs)
+
+    def has_extension(self, extension):
+        return self.path.endswith(extension)
+
 class Page:
     def __init__(self, filename:str):
         assert filename.endswith('.md')
@@ -50,16 +60,19 @@ class Page:
         return self['src_path']
 
 def main():
+    files = []
     pages = []
 
     # read pages
-    for cur_path, _, files in os.walk(SRC_PATH):
-        for file in files:
-            if file.endswith('.md'):
-                rel_path = os.path.relpath(cur_path, SRC_PATH)
-                filepath = os.path.join(rel_path, file)
-                page = Page(filepath)
-                pages.append(page)
+    for cur_path, directories, files_ in os.walk(SRC_PATH):
+        for file_ in files_+directories:
+            rel_path = os.path.relpath(cur_path, SRC_PATH)
+            path=os.path.join(rel_path, file_)
+            files.append(File(path))
+
+    for file_ in files:
+        if file_.has_extension('.md'):
+            pages.append(Page(file_.path))
 
     # prepare output folder
     try:
